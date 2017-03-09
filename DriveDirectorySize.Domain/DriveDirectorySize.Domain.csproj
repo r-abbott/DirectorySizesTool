@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1FC00DE2-14C0-4E25-8AFE-F362E047B499}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{BD2CA379-8FAB-49AE-B413-6D71A3DC3E7F}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DriveDirectorySize.UI</RootNamespace>
-    <AssemblyName>DriveDirectorySize.UI</AssemblyName>
+    <RootNamespace>DriveDirectorySize.Domain</RootNamespace>
+    <AssemblyName>DriveDirectorySize.Domain</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -47,19 +44,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DiskStorage.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Contracts\IDrive.cs" />
+    <Compile Include="Contracts\IDriveReader.cs" />
+    <Compile Include="Contracts\IDriveDirectory.cs" />
+    <Compile Include="DirectoryMap.cs" />
+    <Compile Include="DirectorySizeData.cs" />
+    <Compile Include="DirectorySizeWorker.cs" />
+    <Compile Include="Drive.cs" />
+    <Compile Include="DriveExecutor.cs" />
+    <Compile Include="DriveSizeReader.cs" />
+    <Compile Include="Contracts\IDriveSizeStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DriveDirectorySize.Domain\DriveDirectorySize.Domain.csproj">
-      <Project>{bd2ca379-8fab-49ae-b413-6d71a3dc3e7f}</Project>
-      <Name>DriveDirectorySize.Domain</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
