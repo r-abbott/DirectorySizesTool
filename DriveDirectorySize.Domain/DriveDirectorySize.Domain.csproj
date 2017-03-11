@@ -46,15 +46,15 @@
   <ItemGroup>
     <Compile Include="Contracts\IDrive.cs" />
     <Compile Include="Contracts\IDriveReader.cs" />
-    <Compile Include="Contracts\IDriveDirectory.cs" />
     <Compile Include="DirectoryMap.cs" />
-    <Compile Include="DirectorySizeData.cs" />
+    <Compile Include="Models\DirectorySizeData.cs" />
     <Compile Include="DirectorySizeWorker.cs" />
     <Compile Include="Drive.cs" />
     <Compile Include="DriveExecutor.cs" />
     <Compile Include="DriveSizeReader.cs" />
-    <Compile Include="Contracts\IDriveSizeStorage.cs" />
+    <Compile Include="Storage\Contracts\IDriveSizeStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Storage\DiskStorage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

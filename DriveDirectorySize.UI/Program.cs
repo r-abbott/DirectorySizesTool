@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using DriveDirectorySize.Domain;
 using DriveDirectorySize.Domain.Contracts;
+using DriveDirectorySize.Domain.Models;
 
 namespace DriveDirectorySize.UI
 {
     public class Runner
     {
-        private IDriveSizeStorage _storage = new DiskStorage();
         private IDrive _drive;
 
         public Runner()
         {
-            _drive = new Drive(_storage);
+            _drive = new Drive();
         }
 
         public void Run()
@@ -66,6 +65,13 @@ namespace DriveDirectorySize.UI
                             PrintDirectory(largestDirectory);
                         }
                         break;
+                    case "large":
+                        var result = reader.FindLargestDirectories(10);
+                        foreach(var r in result)
+                        {
+                            PrintDirectory(r);
+                        }
+                        break;
                     default:
                         Console.WriteLine("Invalid command.");
                         break;
@@ -74,13 +80,13 @@ namespace DriveDirectorySize.UI
             }
         }
 
-        private string GetInput(IDriveDirectory currentDirectory)
+        private string GetInput(DirectorySizeData currentDirectory)
         {
-            Console.Write($"\n{currentDirectory.Name}> ");
+            Console.Write($"\n{string.Join(@"\",currentDirectory.Path)}> ");
             return Console.ReadLine();
         }
 
-        private void PrintCurrentDirectory(IDriveDirectory currentDirectory, IEnumerable<IDriveDirectory> subDirectories)
+        private void PrintCurrentDirectory(DirectorySizeData currentDirectory, IEnumerable<DirectorySizeData> subDirectories)
         {
             Console.WriteLine("");
             PrintDirectory(currentDirectory);
@@ -94,9 +100,14 @@ namespace DriveDirectorySize.UI
             }
         }
 
-        private void PrintDirectory(IDriveDirectory directory)
+        private void PrintDirectory(DirectorySizeData directory)
         {
-            Console.WriteLine($"{directory.Name,-38}{directory.Size,20}{directory.TotalSize,20}");
+            var name = directory.Name;
+            if (name.Length > 40)
+            {
+                name = $"{name.Substring(0, 40)}~";
+            }
+            Console.WriteLine($"{name,-41}{directory.Size,19}{directory.TotalSize,19}");
         }
 
     }

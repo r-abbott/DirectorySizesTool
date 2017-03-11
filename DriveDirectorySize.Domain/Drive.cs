@@ -1,4 +1,6 @@
 ﻿using DriveDirectorySize.Domain.Contracts;
+using DriveDirectorySize.Domain.Storage;
+using DriveDirectorySize.Domain.Storage.Contracts;
 
 namespace DriveDirectorySize.Domain
 {
@@ -9,6 +11,11 @@ namespace DriveDirectorySize.Domain
         public Drive(IDriveSizeStorage storage)
         {
             _storage = storage;
+        }
+
+        public Drive()
+        {
+            _storage = new DiskStorage();
         }
 
         public IDriveReader ReadFromStorage()

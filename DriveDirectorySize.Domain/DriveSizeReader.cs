@@ -1,4 +1,6 @@
 ﻿using DriveDirectorySize.Domain.Contracts;
+using DriveDirectorySize.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,21 +13,18 @@ namespace DriveDirectorySize.Domain
         private DirectorySizeData _currentDirectory;
         private IEnumerable<DirectorySizeData> _currentSubDirectories;
 
-        public IDriveDirectory CurrentDirectory { get { return _currentDirectory; } }
-        public IEnumerable<IDriveDirectory> CurrentSubDirectories { get { return _currentSubDirectories; } }
+        public DirectorySizeData CurrentDirectory { get { return _currentDirectory; } }
+        public IEnumerable<DirectorySizeData> CurrentSubDirectories { get { return _currentSubDirectories; } }
 
-        internal DriveSizeReader(IEnumerable<IDriveDirectory> directories)
-            : this(directories.Select(d => new DirectorySizeData(d.Name, d.ParentName, d.Size)).ToList())
-        {
-        }
+        private DirectorySizeData Root { get { return _directoryData.First(); } }
 
         internal DriveSizeReader(IEnumerable<DirectorySizeData> directories)
         {
             _directoryData = directories.OrderBy(x => x.Path.Length).ThenBy(x => x.Name).ToList();
-            ChangeCurrentDirectory(_directoryData.First());
+            ChangeCurrentDirectory(Root);
         }
 
-        public IDriveDirectory ChangeDirectory(string name)
+        public DirectorySizeData ChangeDirectory(string name)
         {
             int depth = _currentDirectory.Path.Length;
             var directory = _directoryData.FirstOrDefault(d =>
@@ -41,11 +40,12 @@ namespace DriveDirectorySize.Domain
             if (name == "..")
             {
                 ChangeCurrentDirectory(GetCurrentParentDirectory());
+                return _currentDirectory;
             }
             return null;
         }
 
-        public IDriveDirectory FindLargestSubDirectory()
+        public DirectorySizeData FindLargestSubDirectory()
         {
             if (_currentSubDirectories.Count() == 0)
             {
@@ -55,9 +55,24 @@ namespace DriveDirectorySize.Domain
             return _currentSubDirectories.First(s => s.TotalSize == maxTotalSize);
         }
 
+        public IEnumerable<DirectorySizeData> FindLargestDirectories(int limit)
+        {
+            return _directoryData
+                .Where(x => x.Path.Depth > 0)
+                .OrderByDescending(x => x.TotalSize)
+                .ThenBy(x => x.Path.Depth)
+                .Take(limit);
+        }
+
+        public IEnumerable<DirectorySizeData> Find(Func<DirectorySizeData,bool> query)
+        {
+            return _directoryData.Where(query);
+        }
+
         private void ChangeCurrentDirectory(DirectorySizeData directory)
         {
-            _currentDirectory = GetDirectoryWithTotalSize(directory);
+            //_currentDirectory = GetDirectoryWithTotalSize(directory);
+            _currentDirectory = directory;
             _currentSubDirectories = GetSubDirectories(directory);
         }
 
@@ -66,20 +81,22 @@ namespace DriveDirectorySize.Domain
             int depth = directory.Path.Length;
             var directories = _directoryData.Where(d =>
                 d.ParentName == directory.Name
-                && d.Path.Length == depth + 1);
+                && d.Path.Length == depth + 1)
+                .OrderBy(d => d.Name);
 
-            return directories.Select(GetDirectoryWithTotalSize).OrderBy(d => d.Name);
+            return directories;
+            //return directories.Select(GetDirectoryWithTotalSize).OrderBy(d => d.Name);
         }
 
-        private DirectorySizeData GetDirectoryWithTotalSize(DirectorySizeData data)
-        {
-            int depth = data.Path.Length - 1;
-            var totalSize = _directoryData
-                .Where(d => d.Path.Length >= depth + 1 && d.Path[depth] == data.Path[depth])
-                .Sum(d => d.Size);
-            return new DirectorySizeData(data.Name, data.ParentName, data.Size, totalSize, data.Path);
+        //private DirectorySizeData GetDirectoryWithTotalSize(DirectorySizeData data)
+        //{
+        //    int depth = data.Path.Length - 1;
+        //    var totalSize = _directoryData
+        //        .Where(d => d.Path.Length >= depth + 1 && d.Path[depth] == data.Path[depth])
+        //        .Sum(d => d.Size);
+        //    return new DirectorySizeData(data.Name, data.ParentName, data.Size, totalSize, data.Path);
 
-        }
+        //}
 
         private DirectorySizeData GetCurrentParentDirectory()
         {
@@ -88,5 +105,7 @@ namespace DriveDirectorySize.Domain
                     x.Path.Length == depth
                     && x.Name == _currentDirectory.ParentName);
         }
+
+        
     }
 }

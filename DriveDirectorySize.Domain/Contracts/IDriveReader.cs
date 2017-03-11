@@ -1,13 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using DriveDirectorySize.Domain.Models;
+using System;
+using System.Collections.Generic;
 
 namespace DriveDirectorySize.Domain.Contracts
 {
     public interface IDriveReader
     {
-        IDriveDirectory CurrentDirectory { get; }
-        IEnumerable<IDriveDirectory> CurrentSubDirectories { get; }
+        DirectorySizeData CurrentDirectory { get; }
+        IEnumerable<DirectorySizeData> CurrentSubDirectories { get; }
 
-        IDriveDirectory ChangeDirectory(string name);
-        IDriveDirectory FindLargestSubDirectory();
+        DirectorySizeData ChangeDirectory(string name);
+        DirectorySizeData FindLargestSubDirectory();
+        IEnumerable<DirectorySizeData> Find(Func<DirectorySizeData, bool> query);
+        IEnumerable<DirectorySizeData> FindLargestDirectories(int limit);
     }
 }

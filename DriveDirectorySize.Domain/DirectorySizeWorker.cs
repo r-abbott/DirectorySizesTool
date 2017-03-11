@@ -1,24 +1,30 @@
-﻿using System;
+﻿using DriveDirectorySize.Domain.Models;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DriveDirectorySize.Domain
 {
     internal class DirectorySizeWorker
     {
-        private readonly BlockingCollection<string> _inputQueue;
-        private readonly Action<DirectorySizeData> _addData;
+        private readonly BlockingCollection<string> _directoryPaths;
+        private readonly BlockingCollection<DirectorySizeData> _localdirectorySizes;
+        private readonly BlockingCollection<DirectorySizeData> _finalDirectorySizes;
 
-        public DirectorySizeWorker(BlockingCollection<string> inputQueue, Action<DirectorySizeData> addData)
+        public DirectorySizeWorker(BlockingCollection<string> directoryPaths,
+            BlockingCollection<DirectorySizeData> localDirectorySizes,
+            BlockingCollection<DirectorySizeData> finalDirectorySizes
+            )
         {
-            _inputQueue = inputQueue;
-            _addData = addData;
+            _directoryPaths = directoryPaths;
+            _localdirectorySizes = localDirectorySizes;
+            _finalDirectorySizes = finalDirectorySizes;
         }
 
-        public void Run()
+        public void ProcessLocalSizes()
         {
-            foreach (var path in _inputQueue.GetConsumingEnumerable())
+            foreach (var path in _directoryPaths.GetConsumingEnumerable())
             {
                 DirectoryInfo di = null;
                 try
@@ -30,8 +36,8 @@ namespace DriveDirectorySize.Domain
                 if (di != null)
                 {
                     var size = GetLocalSize(di);
-                    var sizeData = new DirectorySizeData(di.FullName, di.Parent == null ? "" : di.Parent.FullName, size);
-                    _addData(sizeData);
+                    var sizeData = new DirectorySizeData(di.FullName, size);
+                    _localdirectorySizes.Add(sizeData);
                 }
             }
         }
@@ -55,5 +61,25 @@ namespace DriveDirectorySize.Domain
             catch { }
             return localSize;
         }
+
+        public void ProcessTotalSizes()
+        {
+            foreach (var directory in _localdirectorySizes.GetConsumingEnumerable())
+            {
+                UpdateTotalSize(directory);
+            }
+        }
+
+        private void UpdateTotalSize(DirectorySizeData data)
+        {
+            int depth = data.Path.Depth;
+            var totalSize = _localdirectorySizes
+                .Where(d => d.Path.Depth > depth
+                            && d.Path.IsDescendentOf(data.Path))
+                .Sum(d => d.Size);
+            data.IncreaseTotalSize(totalSize);
+            _finalDirectorySizes.Add(data);
+        }
+
     }
 }
