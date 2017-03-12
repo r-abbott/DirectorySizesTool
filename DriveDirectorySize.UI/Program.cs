@@ -69,7 +69,7 @@ namespace DriveDirectorySize.UI
                         var result = reader.FindLargestDirectories(10);
                         foreach(var r in result)
                         {
-                            PrintDirectory(r);
+                            PrintFullPathDirectory(r);
                         }
                         break;
                     default:
@@ -107,9 +107,64 @@ namespace DriveDirectorySize.UI
             {
                 name = $"{name.Substring(0, 40)}~";
             }
-            Console.WriteLine($"{name,-41}{directory.Size,19}{directory.TotalSize,19}");
+            Console.WriteLine($"{name,-41}{ByteConversion.Convert(directory.Size),19}{ByteConversion.Convert(directory.TotalSize),19}");
         }
 
+        private void PrintFullPathDirectory(DirectorySizeData directory)
+        {
+            Console.WriteLine($"{directory.Path,-60}{ByteConversion.Convert(directory.TotalSize),19}");
+        }
+
+    }
+
+    public class ByteConversion
+    {
+        public long Raw { get; }
+        public string Value { get; private set; }
+
+        public ByteConversion(long bytes)
+        {
+            Raw = bytes;
+        }
+
+        public static string Convert(long bytes)
+        {
+            var kb = bytes / 1000;
+            if (kb >= 1000)
+            {
+                var mb = kb / 1000;
+                if (mb >= 1000)
+                {
+                    var gb = mb / 1000;
+                    return $"{gb} GB";
+                }
+                return $"{mb} MB";
+            }
+            return $"{kb} KB";
+        }
+
+        private void ConvertToLargestSignificance()
+        {
+            var kb = Raw / 1000;
+            if(kb >= 1000)
+            {
+                var mb = kb / 1000;
+                if(mb >= 1000)
+                {
+                    var gb = mb / 1000;
+                    Value = $"{gb} GB";
+                    return;
+                }
+                Value = $"{mb} MB";
+                return;
+            }
+            Value = $"{kb} KB";
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
+        }
     }
 
     class Program

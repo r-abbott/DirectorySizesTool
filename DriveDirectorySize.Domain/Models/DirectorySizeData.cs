@@ -62,6 +62,11 @@ namespace DriveDirectorySize.Domain.Models
         {
             if (string.IsNullOrEmpty(fullPath)) throw new ArgumentNullException("fullPath");
 
+            if (fullPath.EndsWith("\\"))
+            {
+                fullPath = fullPath.Substring(0, fullPath.Length - 1);
+            }
+
             FullPath = fullPath;
             Parts = CreateParts();
             Identity = ParseIdentity();
@@ -101,6 +106,21 @@ namespace DriveDirectorySize.Domain.Models
             return true;
         }
 
+        public bool IsChildOf(Path path)
+        {
+            if(path == null) throw new ArgumentNullException("path");
+            if (Depth <= path.Depth) return false;
+
+            return ParentPath == path.FullPath;
+        }
+
+        public string GetAncestorPath(int depth)
+        {
+            if (depth >= Depth) return null;
+
+            return PathToDepth(depth);
+        }
+
         private string[] CreateParts()
         {
             return FullPath.Split(new[] { PATH_SEPARATOR }, StringSplitOptions.RemoveEmptyEntries);
@@ -126,6 +146,7 @@ namespace DriveDirectorySize.Domain.Models
             {
                 return "";
             }
+
             return string.Join($"{PATH_SEPARATOR}", Parts.Take(Depth));
         }
 

@@ -57,11 +57,49 @@ namespace DriveDirectorySize.Domain
 
         public IEnumerable<DirectorySizeData> FindLargestDirectories(int limit)
         {
+            // Needs to be significant to the First Child Directory of Root, not it's own parent
+            var topDirectories = FindLargestSubDirectories(Root, 0);
+
+            var largestDirectories = new List<DirectorySizeData>();
+            var directoriesToCheck = new List<DirectorySizeData>(topDirectories);
+            while (directoriesToCheck.Count > 0)
+            {
+                var currentToCheck = new List<DirectorySizeData>(directoriesToCheck);
+                foreach(var parentDir in currentToCheck)
+                {
+                    directoriesToCheck.Remove(parentDir);
+                    var subDirs = FindLargestSubDirectories(parentDir, 1);
+                    if (subDirs.Count() > 0)
+                    {
+                        directoriesToCheck.AddRange(subDirs);
+                    }
+                    else
+                    {
+                        largestDirectories.Add(parentDir);
+                    }
+                }
+            }
+
+            return largestDirectories.OrderByDescending(x=>x.TotalSize);
+            
+        }
+
+        private IEnumerable<DirectorySizeData> FindLargestSubDirectories(DirectorySizeData parentDirectory, int depth)
+        {
+            
             return _directoryData
-                .Where(x => x.Path.Depth > 0)
+                .Where(x => x.Path.IsChildOf(parentDirectory.Path)
+                            // TODO make this make more sense...
+                            && IsSignificantSizeDifferent(_directoryData.First(a=>a.Path.FullPath == x.Path.GetAncestorPath(depth)).TotalSize , x.TotalSize))
                 .OrderByDescending(x => x.TotalSize)
-                .ThenBy(x => x.Path.Depth)
-                .Take(limit);
+                .ToList();
+        }
+
+        private bool IsSignificantSizeDifferent(long parentTotalSize, long childTotalSize)
+        {
+            if (parentTotalSize == 0 || childTotalSize == 0) return false;
+
+            return ((double)childTotalSize / (double)parentTotalSize) >= .25d;
         }
 
         public IEnumerable<DirectorySizeData> Find(Func<DirectorySizeData,bool> query)
@@ -71,7 +109,6 @@ namespace DriveDirectorySize.Domain
 
         private void ChangeCurrentDirectory(DirectorySizeData directory)
         {
-            //_currentDirectory = GetDirectoryWithTotalSize(directory);
             _currentDirectory = directory;
             _currentSubDirectories = GetSubDirectories(directory);
         }
@@ -85,18 +122,7 @@ namespace DriveDirectorySize.Domain
                 .OrderBy(d => d.Name);
 
             return directories;
-            //return directories.Select(GetDirectoryWithTotalSize).OrderBy(d => d.Name);
         }
-
-        //private DirectorySizeData GetDirectoryWithTotalSize(DirectorySizeData data)
-        //{
-        //    int depth = data.Path.Length - 1;
-        //    var totalSize = _directoryData
-        //        .Where(d => d.Path.Length >= depth + 1 && d.Path[depth] == data.Path[depth])
-        //        .Sum(d => d.Size);
-        //    return new DirectorySizeData(data.Name, data.ParentName, data.Size, totalSize, data.Path);
-
-        //}
 
         private DirectorySizeData GetCurrentParentDirectory()
         {
