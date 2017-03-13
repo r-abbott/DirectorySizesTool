@@ -12,6 +12,6 @@ namespace DriveDirectorySize.Domain.Contracts
         DirectorySizeData ChangeDirectory(string name);
         DirectorySizeData FindLargestSubDirectory();
         IEnumerable<DirectorySizeData> Find(Func<DirectorySizeData, bool> query);
-        IEnumerable<DirectorySizeData> FindLargestDirectories(int limit);
+        IEnumerable<DirectorySizeData> FindLargestDirectories();
     }
 }

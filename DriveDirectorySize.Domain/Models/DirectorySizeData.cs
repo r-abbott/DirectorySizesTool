@@ -94,9 +94,9 @@ namespace DriveDirectorySize.Domain.Models
         public bool IsDescendentOf(Path path)
         {
             if (path == null) throw new ArgumentNullException("path");
-            if (Length < path.Length) return false;
+            if (Depth <= path.Depth) return false;
 
-            for(int i = 0; i < path.Length; i++)
+            for(int i = 0; i < path.Depth; i++)
             {
                 if(path.Parts[i] != Parts[i])
                 {

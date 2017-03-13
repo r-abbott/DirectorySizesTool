@@ -66,7 +66,7 @@ namespace DriveDirectorySize.UI
                         }
                         break;
                     case "large":
-                        var result = reader.FindLargestDirectories(10);
+                        var result = reader.FindLargestDirectories();
                         foreach(var r in result)
                         {
                             PrintFullPathDirectory(r);

@@ -55,51 +55,40 @@ namespace DriveDirectorySize.Domain
             return _currentSubDirectories.First(s => s.TotalSize == maxTotalSize);
         }
 
-        public IEnumerable<DirectorySizeData> FindLargestDirectories(int limit)
+        public IEnumerable<DirectorySizeData> FindLargestDirectories()
         {
-            // Needs to be significant to the First Child Directory of Root, not it's own parent
-            var topDirectories = FindLargestSubDirectories(Root, 0);
+            return FindLargestSubDirectories(Root);
+        }
 
-            var largestDirectories = new List<DirectorySizeData>();
-            var directoriesToCheck = new List<DirectorySizeData>(topDirectories);
-            while (directoriesToCheck.Count > 0)
+        private IEnumerable<DirectorySizeData> FindLargestSubDirectories(DirectorySizeData parentDirectory)
+        {
+            const double thresholdMultiplier = .05d; //.075d;
+            const double thresholdMultiplierIncrement = .075d; //.085d;
+            const double includeParentThresholdMultiplier = 1.25d;
+
+            var thresholdSize = parentDirectory.TotalSize * (thresholdMultiplier + (thresholdMultiplierIncrement * parentDirectory.Path.Depth));
+
+            var qualifyingDirectories = new List<DirectorySizeData>();
+
+            var directoriesWithinThreshold = _directoryData
+                .Where(d => d.Path.ParentPath == parentDirectory.Path.FullPath
+                && d.TotalSize >= thresholdSize).ToList();
+                
+
+            var subSize = directoriesWithinThreshold.Sum(d => d.TotalSize);
+
+            if (Root != parentDirectory
+                && (parentDirectory.TotalSize - subSize) >= (thresholdSize * includeParentThresholdMultiplier))
             {
-                var currentToCheck = new List<DirectorySizeData>(directoriesToCheck);
-                foreach(var parentDir in currentToCheck)
-                {
-                    directoriesToCheck.Remove(parentDir);
-                    var subDirs = FindLargestSubDirectories(parentDir, 1);
-                    if (subDirs.Count() > 0)
-                    {
-                        directoriesToCheck.AddRange(subDirs);
-                    }
-                    else
-                    {
-                        largestDirectories.Add(parentDir);
-                    }
-                }
+                qualifyingDirectories.Add(parentDirectory);
             }
 
-            return largestDirectories.OrderByDescending(x=>x.TotalSize);
-            
-        }
+            foreach(var directory in directoriesWithinThreshold)
+            {
+                qualifyingDirectories.AddRange(FindLargestSubDirectories(directory));
+            }
 
-        private IEnumerable<DirectorySizeData> FindLargestSubDirectories(DirectorySizeData parentDirectory, int depth)
-        {
-            
-            return _directoryData
-                .Where(x => x.Path.IsChildOf(parentDirectory.Path)
-                            // TODO make this make more sense...
-                            && IsSignificantSizeDifferent(_directoryData.First(a=>a.Path.FullPath == x.Path.GetAncestorPath(depth)).TotalSize , x.TotalSize))
-                .OrderByDescending(x => x.TotalSize)
-                .ToList();
-        }
-
-        private bool IsSignificantSizeDifferent(long parentTotalSize, long childTotalSize)
-        {
-            if (parentTotalSize == 0 || childTotalSize == 0) return false;
-
-            return ((double)childTotalSize / (double)parentTotalSize) >= .25d;
+            return qualifyingDirectories;
         }
 
         public IEnumerable<DirectorySizeData> Find(Func<DirectorySizeData,bool> query)
