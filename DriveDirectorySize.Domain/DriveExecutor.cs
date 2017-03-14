@@ -1,4 +1,5 @@
-﻿using DriveDirectorySize.Domain.Models;
+﻿using DriveDirectorySize.Domain.Contracts;
+using DriveDirectorySize.Domain.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,10 +15,12 @@ namespace DriveDirectorySize.Domain
         private BlockingCollection<DirectorySizeData> _finalDirectories;
         private BlockingCollection<string> _inputDirectories;
         private List<DirectorySizeWorker> _readers;
+        private ILog _log;
 
-        public DriveExecutor(string drive)
+        public DriveExecutor(string drive, ILog log)
         {
             _drive = drive;
+            _log = log;
             _finalDirectories = new BlockingCollection<DirectorySizeData>();
             _localSizeDirectories = new BlockingCollection<DirectorySizeData>();
             _inputDirectories = new BlockingCollection<string>();
@@ -35,11 +38,14 @@ namespace DriveDirectorySize.Domain
                 workerTasks[taskId++] = task;
             });
 
-            var map = new DirectoryMap(_drive, _inputDirectories);
+            WriteOutput("Processing local sizes.");
+            var map = new DirectoryMap(_drive, _inputDirectories, _log);
             map.ReadAll();
 
             Task.WaitAll(workerTasks);
             _localSizeDirectories.CompleteAdding();
+            WriteOutput("Finished processing local sizes.");
+            WriteOutput("Processing total sizes.");
 
             taskId = 0;
             _readers.ForEach(r =>
@@ -48,6 +54,7 @@ namespace DriveDirectorySize.Domain
                 workerTasks[taskId++] = task;
             });
             Task.WaitAll(workerTasks);
+            WriteOutput("Finished.\n");
             return _finalDirectories.ToList();
         }
 
@@ -57,6 +64,14 @@ namespace DriveDirectorySize.Domain
             {
                 var worker = new DirectorySizeWorker(_inputDirectories, _localSizeDirectories, _finalDirectories);
                 _readers.Add(worker);
+            }
+        }
+
+        private void WriteOutput(string text)
+        {
+            if (_log != null)
+            {
+                _log.WriteConcurrent(text);
             }
         }
     }

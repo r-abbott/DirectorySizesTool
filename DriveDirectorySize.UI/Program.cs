@@ -1,36 +1,57 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using DriveDirectorySize.Domain;
 using DriveDirectorySize.Domain.Contracts;
-using DriveDirectorySize.Domain.Models;
+using DriveDirectorySize.UI.Contracts;
+using DriveDirectorySize.UI.ViewModels;
+using DriveDirectorySize.UI.Infrastructure;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace DriveDirectorySize.UI
 {
     public class Runner
     {
         private IDrive _drive;
-
-        public Runner()
-        {
-            _drive = new Drive();
-        }
+        private ISizeConversion _sizeConversion = new ByteConversion();
+        private IDriveReader _reader;
 
         public void Run()
         {
-            var reader = _drive.ReadFromStorage();
-            if(reader == null)
+            var driveLetter = GetDriveLetter();
+            _drive = new Drive(driveLetter, new ProcessLogger());
+
+            _reader = _drive.ReadFromStorage();
+            if(_reader == null)
             {
-                reader = _drive.Read("c:\\");
+                _reader = _drive.Read();
             }
-            ProcessCommands(reader);
+            ProcessCommands();
         }
 
-        private void ProcessCommands(IDriveReader reader)
+        private char GetDriveLetter()
         {
-            PrintCurrentDirectory(reader.CurrentDirectory, reader.CurrentSubDirectories);
+            char drive = 'c';
+            bool isValidDrive = false;
+            IEnumerable<char> drives = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
 
-            var command = GetInput(reader.CurrentDirectory);
+            while (!isValidDrive)
+            {
+                Console.Write("Which drive do you want to read: ");
+                var response = Console.ReadLine().ToLower();
+                if (response.Length > 0)
+                {
+                    drive = response.First();
+                    isValidDrive = drives.Contains(drive);
+                }
+            }
+            return drive;
+        }
+
+        private void ProcessCommands()
+        {
+            DisplayCurrentDirectory();
+
+            var command = GetInput();
             while (command != "quit")
             {
                 var parts = command.Split(' ');
@@ -42,135 +63,68 @@ namespace DriveDirectorySize.UI
                             Console.WriteLine("Invalid parameters for 'open'");
                             break;
                         }
-
-                        var directory = reader.ChangeDirectory(parts[1]);
-
-                        if (directory == null)
-                        {
-                            Console.WriteLine("Directory not found.");
-                        }
-                        else
-                        {
-                            PrintCurrentDirectory(reader.CurrentDirectory, reader.CurrentSubDirectories);
-                        }
+                        ChangeDirectory(parts.Skip(1));
                         break;
                     case "largest":
-                        var largestDirectory = reader.FindLargestSubDirectory();
-                        if (largestDirectory == null)
-                        {
-                            Console.WriteLine("Invalid command, directory has no subdirectories.");
-                        }
-                        else
-                        {
-                            PrintDirectory(largestDirectory);
-                        }
-                        break;
                     case "large":
-                        var result = reader.FindLargestDirectories();
-                        foreach(var r in result)
+                        double percentThreshold = .05d;
+                        if (parts.Length > 1)
                         {
-                            PrintFullPathDirectory(r);
+                            double.TryParse(parts[1], out percentThreshold);
                         }
+                        DisplayLargestDirectories(percentThreshold);
                         break;
                     default:
                         Console.WriteLine("Invalid command.");
                         break;
                 }
-                command = GetInput(reader.CurrentDirectory);
+                command = GetInput();
             }
         }
 
-        private string GetInput(DirectorySizeData currentDirectory)
+        private void ChangeDirectory(IEnumerable<string> name)
         {
-            Console.Write($"\n{string.Join(@"\",currentDirectory.Path)}> ");
+            var directory = _reader.ChangeDirectory(string.Join(" ",name));
+
+            if (directory == null)
+            {
+                Console.WriteLine("Directory not found.");
+            }
+            else
+            {
+                DisplayCurrentDirectory();
+            }
+        }
+
+        private void DisplayCurrentDirectory()
+        {
+            var viewModel = new DirectoryWithSubDirectoriesViewModel(_reader.CurrentDirectory, _reader.CurrentSubDirectories, _sizeConversion);
+            viewModel.Render();
+        }
+
+        private void DisplayLargestDirectories(double percentThreshold)
+        {
+            var result = _reader.FindLargestDirectories(percentThreshold);
+            var viewModel = new DirectoryPathsViewModel(result, _sizeConversion);
+            viewModel.Render();
+        }
+
+        private string GetInput()
+        {
+            Console.Write($"\n{string.Join(@"\", _reader.CurrentDirectory.Path)}\\> ");
             return Console.ReadLine();
         }
-
-        private void PrintCurrentDirectory(DirectorySizeData currentDirectory, IEnumerable<DirectorySizeData> subDirectories)
-        {
-            Console.WriteLine("");
-            PrintDirectory(currentDirectory);
-            if (subDirectories.Count() > 0)
-            {
-                Console.WriteLine($"\nSub Directories:");
-                foreach (var sd in subDirectories)
-                {
-                    PrintDirectory(sd);
-                }
-            }
-        }
-
-        private void PrintDirectory(DirectorySizeData directory)
-        {
-            var name = directory.Name;
-            if (name.Length > 40)
-            {
-                name = $"{name.Substring(0, 40)}~";
-            }
-            Console.WriteLine($"{name,-41}{ByteConversion.Convert(directory.Size),19}{ByteConversion.Convert(directory.TotalSize),19}");
-        }
-
-        private void PrintFullPathDirectory(DirectorySizeData directory)
-        {
-            Console.WriteLine($"{directory.Path,-60}{ByteConversion.Convert(directory.TotalSize),19}");
-        }
-
     }
 
-    public class ByteConversion
-    {
-        public long Raw { get; }
-        public string Value { get; private set; }
-
-        public ByteConversion(long bytes)
-        {
-            Raw = bytes;
-        }
-
-        public static string Convert(long bytes)
-        {
-            var kb = bytes / 1000;
-            if (kb >= 1000)
-            {
-                var mb = kb / 1000;
-                if (mb >= 1000)
-                {
-                    var gb = mb / 1000;
-                    return $"{gb} GB";
-                }
-                return $"{mb} MB";
-            }
-            return $"{kb} KB";
-        }
-
-        private void ConvertToLargestSignificance()
-        {
-            var kb = Raw / 1000;
-            if(kb >= 1000)
-            {
-                var mb = kb / 1000;
-                if(mb >= 1000)
-                {
-                    var gb = mb / 1000;
-                    Value = $"{gb} GB";
-                    return;
-                }
-                Value = $"{mb} MB";
-                return;
-            }
-            Value = $"{kb} KB";
-        }
-
-        public override string ToString()
-        {
-            return base.ToString();
-        }
-    }
+    
 
     class Program
     {
         static void Main(string[] args)
         {
+            Console.WindowWidth = 150;
+            Console.WindowHeight = 40;
+
             var runner = new Runner();
             runner.Run();
         }

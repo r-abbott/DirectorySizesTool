@@ -5,8 +5,8 @@ namespace DriveDirectorySize.Domain.Storage.Contracts
 {
     public interface IDriveSizeStorage
     {
-        bool Exists();
-        IEnumerable<DirectorySizeData> Retrieve();
-        void Save(IEnumerable<DirectorySizeData> data);
+        bool Exists(string filePath);
+        IEnumerable<DirectorySizeData> Retrieve(string filePath);
+        void Save(string filePath, IEnumerable<DirectorySizeData> data);
     }
 }

@@ -3,6 +3,6 @@
     public interface IDrive
     {
         IDriveReader ReadFromStorage();
-        IDriveReader Read(string drive);
+        IDriveReader Read();
     }
 }

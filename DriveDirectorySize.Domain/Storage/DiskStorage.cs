@@ -1,4 +1,5 @@
-﻿using DriveDirectorySize.Domain.Models;
+﻿using DriveDirectorySize.Domain.Contracts;
+using DriveDirectorySize.Domain.Models;
 using DriveDirectorySize.Domain.Storage.Contracts;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -8,27 +9,49 @@ namespace DriveDirectorySize.Domain.Storage
 {
     internal class DiskStorage : IDriveSizeStorage
     {
-        private const string FilePath = "driveSizeStorage.json";
+        private readonly ILog _output;
 
-        public bool Exists()
+        public DiskStorage(ILog output)
         {
-            return File.Exists(FilePath);
+            _output = output;
         }
 
-        public IEnumerable<DirectorySizeData> Retrieve()
+        public bool Exists(string filePath)
         {
-            if (Exists())
+            return File.Exists(filePath);
+        }
+
+        public IEnumerable<DirectorySizeData> Retrieve(string filePath)
+        {
+            WriteOutput("Looking save file.\n");
+            if (Exists(filePath))
             {
-                var data = File.ReadAllText(FilePath);
-                return JsonConvert.DeserializeObject<IEnumerable<DirectorySizeData>>(data);
+                WriteOutput("Save file found, reading... ");
+                var data = File.ReadAllText(filePath);
+                WriteOutput("Done!\n");
+                WriteOutput("Converting... ");
+                var converted = JsonConvert.DeserializeObject<IEnumerable<DirectorySizeData>>(data);
+                WriteOutput("Done!\n");
+                return converted;
             }
+            WriteOutput("No save file found.\n");
             return null;
         }
 
-        public void Save(IEnumerable<DirectorySizeData> data)
+        public void Save(string filePath, IEnumerable<DirectorySizeData> data)
         {
+            WriteOutput($"Saving data to {filePath}... ");
             var json = JsonConvert.SerializeObject(data);
-            File.WriteAllText(FilePath, json);
+            File.WriteAllText(filePath, json);
+            WriteOutput("File saved!\n");
+        }
+
+        private void WriteOutput(string text)
+        {
+            if (_output != null)
+            {
+                _output.Write(text);
+            }
         }
     }
 }

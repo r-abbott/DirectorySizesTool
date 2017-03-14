@@ -26,7 +26,12 @@ namespace DriveDirectorySize.Domain
 
         public DirectorySizeData ChangeDirectory(string name)
         {
-            int depth = _currentDirectory.Path.Length;
+            if (name == "..")
+            {
+                ChangeCurrentDirectory(GetCurrentParentDirectory());
+                return _currentDirectory;
+            }
+
             var directory = _directoryData.FirstOrDefault(d =>
                 d.ParentName == _currentDirectory.Name
                 && d.Name == name);
@@ -36,35 +41,22 @@ namespace DriveDirectorySize.Domain
                 ChangeCurrentDirectory(directory);
                 return _currentDirectory;
             }
-
-            if (name == "..")
-            {
-                ChangeCurrentDirectory(GetCurrentParentDirectory());
-                return _currentDirectory;
-            }
             return null;
         }
 
-        public DirectorySizeData FindLargestSubDirectory()
+        public IEnumerable<DirectorySizeData> FindLargestDirectories(double percentageThreshold)
         {
-            if (_currentSubDirectories.Count() == 0)
-            {
-                return null;
-            }
-            long maxTotalSize = _currentSubDirectories.Max(x => x.TotalSize);
-            return _currentSubDirectories.First(s => s.TotalSize == maxTotalSize);
+            return FindLargestSubDirectories(Root, percentageThreshold);
         }
 
-        public IEnumerable<DirectorySizeData> FindLargestDirectories()
+        private IEnumerable<DirectorySizeData> FindLargestSubDirectories(
+            DirectorySizeData parentDirectory,
+            double percentageThreshold
+            )
         {
-            return FindLargestSubDirectories(Root);
-        }
-
-        private IEnumerable<DirectorySizeData> FindLargestSubDirectories(DirectorySizeData parentDirectory)
-        {
-            const double thresholdMultiplier = .05d; //.075d;
-            const double thresholdMultiplierIncrement = .075d; //.085d;
-            const double includeParentThresholdMultiplier = 1.25d;
+            double thresholdMultiplier = percentageThreshold; //.075d;
+            double thresholdMultiplierIncrement = percentageThreshold + (percentageThreshold / 2d); //.075d; //.085d;
+            double includeParentThresholdMultiplier = 1 + (percentageThreshold * 4);  //1.25d;
 
             var thresholdSize = parentDirectory.TotalSize * (thresholdMultiplier + (thresholdMultiplierIncrement * parentDirectory.Path.Depth));
 
@@ -73,7 +65,7 @@ namespace DriveDirectorySize.Domain
             var directoriesWithinThreshold = _directoryData
                 .Where(d => d.Path.ParentPath == parentDirectory.Path.FullPath
                 && d.TotalSize >= thresholdSize).ToList();
-                
+
 
             var subSize = directoriesWithinThreshold.Sum(d => d.TotalSize);
 
@@ -83,21 +75,18 @@ namespace DriveDirectorySize.Domain
                 qualifyingDirectories.Add(parentDirectory);
             }
 
-            foreach(var directory in directoriesWithinThreshold)
+            foreach (var directory in directoriesWithinThreshold)
             {
-                qualifyingDirectories.AddRange(FindLargestSubDirectories(directory));
+                qualifyingDirectories.AddRange(FindLargestSubDirectories(directory, percentageThreshold));
             }
 
             return qualifyingDirectories;
         }
 
-        public IEnumerable<DirectorySizeData> Find(Func<DirectorySizeData,bool> query)
-        {
-            return _directoryData.Where(query);
-        }
-
         private void ChangeCurrentDirectory(DirectorySizeData directory)
         {
+            if (directory == null) return;
+
             _currentDirectory = directory;
             _currentSubDirectories = GetSubDirectories(directory);
         }
@@ -115,12 +104,10 @@ namespace DriveDirectorySize.Domain
 
         private DirectorySizeData GetCurrentParentDirectory()
         {
-            int depth = _currentDirectory.Path.Length - 1;
+            int depth = _currentDirectory.Path.Depth - 1;
             return _directoryData.FirstOrDefault(x =>
-                    x.Path.Length == depth
+                    x.Path.Depth == depth
                     && x.Name == _currentDirectory.ParentName);
         }
-
-        
     }
 }

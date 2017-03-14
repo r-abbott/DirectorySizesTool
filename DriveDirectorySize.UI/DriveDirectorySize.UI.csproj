@@ -47,8 +47,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contracts\ISizeConversion.cs" />
+    <Compile Include="Infrastructure\ByteConverter.cs" />
+    <Compile Include="Infrastructure\ProcessLogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModels\DirectoryPathsViewModel.cs" />
+    <Compile Include="ViewModels\DirectoryWithSubDirectoriesViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
