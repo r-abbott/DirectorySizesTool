@@ -1,16 +1,18 @@
 ﻿using DriveDirectorySize.Domain.Models;
+using DriveDirectorySize.Domain.ValueObjects;
 using DriveDirectorySize.UI.Contracts;
+using DriveDirectorySize.UI.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DriveDirectorySize.UI.ViewModels
 {
-    public class DirectoryPathsViewModel
+    public class DirectoryPathsViewModel : IViewModel
     {
         private IEnumerable<DirectorySizeData> _directories;
         private ISizeConversion _sizeConversion;
-        private Dictionary<string, long> _formattedDirectories;
+        private Dictionary<string, Size> _formattedDirectories;
 
 
         private const int PATH_COLUMN_WIDTH = -139;
@@ -36,33 +38,30 @@ namespace DriveDirectorySize.UI.ViewModels
 
         private void RenderHeader()
         {
-            Console.WriteLine(_header);
-            Console.WriteLine(new string('-', Console.BufferWidth - 1));
+            UIConsole.WriteLine(_header);
+            UIConsole.WriteHorizontalRule();
         }
 
-        private void Render(KeyValuePair<string,long> directory)
+        private void Render(KeyValuePair<string,Size> directory)
         {
-            var size = _sizeConversion.Convert(directory.Value);
-            var output = $"{directory.Key,PATH_COLUMN_WIDTH}{size,SIZE_COLUMN_WIDTH}";
-            if (size.Contains("GB"))
+            var output = $"{directory.Key,PATH_COLUMN_WIDTH}{directory.Value,SIZE_COLUMN_WIDTH}";
+            if(directory.Value.SizeType == SizeType.Gigabytes)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                UIConsole.WriteColorLine(ConsoleColor.Red, output);
             }
-            else if (size.Contains("MB"))
+            else if (directory.Value.SizeType == SizeType.Megabytes)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
+                UIConsole.WriteColorLine(ConsoleColor.Yellow, output);
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.White;
+                UIConsole.WriteLine(output);
             }
-            Console.WriteLine(output);
-            Console.ForegroundColor = ConsoleColor.White;
         }
 
         private void Format()
         {
-            _formattedDirectories = new Dictionary<string, long>();
+            _formattedDirectories = new Dictionary<string, Size>();
 
             foreach (var dir in _directories)
             {
@@ -80,7 +79,19 @@ namespace DriveDirectorySize.UI.ViewModels
                     {
                         if (i <= youngest.Path.Depth)
                         {
-                            formattedPath += ".\\";
+                            var identity = youngest.Path.IdentityAtDepth(i);
+                            if (identity.Length < 6)
+                            {
+                                identity += "\\";
+                            }
+                            else
+                            {
+                                if(identity.Length > 5)
+                                {
+                                    identity = $"{identity.Substring(0, 5)}~\\";
+                                }
+                            }
+                            formattedPath += $"{identity}";
                         }
                         else
                         {
@@ -89,7 +100,7 @@ namespace DriveDirectorySize.UI.ViewModels
                     }
                 }
 
-                _formattedDirectories.Add(formattedPath, dir.TotalSize);
+                _formattedDirectories.Add(formattedPath, Size.BestFit(dir.TotalSize));
             }
         }
     }

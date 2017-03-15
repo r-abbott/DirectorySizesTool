@@ -1,5 +1,4 @@
 ﻿using DriveDirectorySize.Domain.Contracts;
-using System;
 
 namespace DriveDirectorySize.UI.Infrastructure
 {
@@ -7,26 +6,17 @@ namespace DriveDirectorySize.UI.Infrastructure
     {
         public void Write(string text)
         {
-            Console.Write(text);
+            UIConsole.Write(text);
         }
 
         public void WriteConcurrent(string text)
         {
-            EraseLine();
-            Write(text);
-        }
-
-        private void EraseLine()
-        {
-            string eraser = new string(' ', Console.BufferWidth - 1);
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.Write(eraser);
-            Console.SetCursorPosition(0, Console.CursorTop);
+            UIConsole.WriteConcurrent(text);
         }
 
         public void WriteLine(string text)
         {
-            Console.WriteLine(text);
+            UIConsole.WriteLine(text);
         }
     }
 }

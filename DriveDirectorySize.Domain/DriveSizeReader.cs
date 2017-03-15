@@ -1,5 +1,6 @@
 ﻿using DriveDirectorySize.Domain.Contracts;
 using DriveDirectorySize.Domain.Models;
+using DriveDirectorySize.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +45,15 @@ namespace DriveDirectorySize.Domain
             return null;
         }
 
+        public IEnumerable<DirectorySizeData> FindDirectoriesLargerThan(Size size)
+        {
+            return _directoryData.Where(d => d.TotalSize >= size.ByteValue)
+                .OrderBy(d => d.Path.ParentPath)
+                .ThenBy(d => d.Path.Identity)
+                .ThenBy(d => d.Path.Depth);
+                
+        }
+
         public IEnumerable<DirectorySizeData> FindLargestDirectories(double percentageThreshold)
         {
             return FindLargestSubDirectories(Root, percentageThreshold);
@@ -54,9 +64,9 @@ namespace DriveDirectorySize.Domain
             double percentageThreshold
             )
         {
-            double thresholdMultiplier = percentageThreshold; //.075d;
-            double thresholdMultiplierIncrement = percentageThreshold + (percentageThreshold / 2d); //.075d; //.085d;
-            double includeParentThresholdMultiplier = 1 + (percentageThreshold * 4);  //1.25d;
+            double thresholdMultiplier = percentageThreshold;
+            double thresholdMultiplierIncrement = percentageThreshold + (percentageThreshold / 2d);
+            double includeParentThresholdMultiplier = 1 + (percentageThreshold * 4);
 
             var thresholdSize = parentDirectory.TotalSize * (thresholdMultiplier + (thresholdMultiplierIncrement * parentDirectory.Path.Depth));
 

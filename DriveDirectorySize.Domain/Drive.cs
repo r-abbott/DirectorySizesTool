@@ -1,6 +1,7 @@
 ﻿using DriveDirectorySize.Domain.Contracts;
 using DriveDirectorySize.Domain.Storage;
 using DriveDirectorySize.Domain.Storage.Contracts;
+using System;
 using System.IO;
 
 namespace DriveDirectorySize.Domain
@@ -9,11 +10,17 @@ namespace DriveDirectorySize.Domain
     {
         private readonly char _driveLetter;
         private readonly IDriveSizeStorage _storage;
-        private string _filePath;
+        private string _driveDirectory;
+        private string _saveFilePath;
         private ILog _log;
 
         public Drive(char driveLetter, ILog log)
         {
+            _driveDirectory = $"{driveLetter}:\\";
+            if (!Directory.Exists(_driveDirectory))
+            {
+                throw new InvalidOperationException($"Drive {_driveLetter} does not exist.");
+            }
             _driveLetter = driveLetter;
             _storage = new DiskStorage(log);
             _log = log;
@@ -22,7 +29,7 @@ namespace DriveDirectorySize.Domain
 
         public IDriveReader ReadFromStorage()
         {
-            var data = _storage.Retrieve(_filePath);
+            var data = _storage.Retrieve(_saveFilePath);
             if (data == null)
             {
                 return null;
@@ -32,16 +39,16 @@ namespace DriveDirectorySize.Domain
 
         public IDriveReader Read()
         {
-            var executor = new DriveExecutor($"{_driveLetter}:\\", _log);
+            var executor = new DriveExecutor(_driveDirectory, _log);
             WriteOutput("Reading drive:\n");
             var data = executor.Run();
-            _storage.Save(_filePath, data);
+            _storage.Save(_saveFilePath, data);
             return new DriveSizeReader(data);
         }
 
         private void CreateFilePath(char drive)
         {
-            _filePath = $"Drive_{drive}.json";
+            _saveFilePath = $"Drive_{drive}.json";
         }
 
         private void WriteOutput(string text)

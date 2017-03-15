@@ -1,11 +1,12 @@
 ﻿using DriveDirectorySize.Domain.Models;
 using DriveDirectorySize.UI.Contracts;
+using DriveDirectorySize.UI.Infrastructure;
 using System;
 using System.Collections.Generic;
 
 namespace DriveDirectorySize.UI.ViewModels
 {
-    public class DirectoryWithSubDirectoriesViewModel
+    public class DirectoryWithSubDirectoriesViewModel : IViewModel
     {
         private DirectorySizeData _directory;
         private IEnumerable<DirectorySizeData> _subDirectories;
@@ -19,8 +20,7 @@ namespace DriveDirectorySize.UI.ViewModels
         public DirectoryWithSubDirectoriesViewModel(
             DirectorySizeData directory,
             IEnumerable<DirectorySizeData> subDirectories,
-            ISizeConversion sizeConversion
-            )
+            ISizeConversion sizeConversion)
         {
             _directory = directory;
             _subDirectories = subDirectories;
@@ -34,7 +34,7 @@ namespace DriveDirectorySize.UI.ViewModels
             Console.WriteLine();
             foreach(var directory in _subDirectories)
             {
-                Render(directory);
+                RenderSubDirectory(directory);
             }
         }
 
@@ -49,21 +49,31 @@ namespace DriveDirectorySize.UI.ViewModels
             var size = _sizeConversion.Convert(directory.Size);
             var totalSize = _sizeConversion.Convert(directory.TotalSize);
             var output = $"{directory.Name,NAME_COLUMN_WIDTH}{size,SIZE_COLUMN_WIDTH}{totalSize,SIZE_COLUMN_WIDTH}";
+            RenderColorLine(totalSize, output);
+        }
 
+        private void RenderSubDirectory(DirectorySizeData directory)
+        {
+            var size = _sizeConversion.Convert(directory.Size);
+            var totalSize = _sizeConversion.Convert(directory.TotalSize);
+            var output = $"  {directory.Name,NAME_COLUMN_WIDTH+2}{size,SIZE_COLUMN_WIDTH}{totalSize,SIZE_COLUMN_WIDTH}";
+            RenderColorLine(totalSize, output);            
+        }
+
+        private void RenderColorLine(string totalSize, string output)
+        {
             if (totalSize.Contains("GB"))
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                UIConsole.WriteColorLine(ConsoleColor.Red, output);
             }
-            else if(totalSize.Contains("MB"))
+            else if (totalSize.Contains("MB"))
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
+                UIConsole.WriteColorLine(ConsoleColor.Yellow, output);
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.White;
+                UIConsole.WriteLine(output);
             }
-            Console.WriteLine(output);
-            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }
