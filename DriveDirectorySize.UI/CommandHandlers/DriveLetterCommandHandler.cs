@@ -1,4 +1,5 @@
-﻿using DriveDirectorySize.UI.Infrastructure;
+﻿using DriveDirectorySize.UI.Controllers;
+using DriveDirectorySize.UI.Infrastructure;
 
 namespace DriveDirectorySize.UI.CommandHandlers
 {

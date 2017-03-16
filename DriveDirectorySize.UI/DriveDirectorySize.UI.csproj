@@ -51,7 +51,7 @@
     <Compile Include="CommandHandlers\DriveReaderCommandHandler.cs" />
     <Compile Include="CommandHandlers\ICommandHandler.cs" />
     <Compile Include="Contracts\ISizeConversion.cs" />
-    <Compile Include="DirectoryController.cs" />
+    <Compile Include="Controllers\DirectoryController.cs" />
     <Compile Include="Infrastructure\ByteConverter.cs" />
     <Compile Include="Infrastructure\ProcessLogger.cs" />
     <Compile Include="Infrastructure\UIConsole.cs" />

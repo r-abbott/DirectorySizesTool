@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriveDirectorySize.UI", "Dr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriveDirectorySize.Domain", "DriveDirectorySize.Domain\DriveDirectorySize.Domain.csproj", "{BD2CA379-8FAB-49AE-B413-6D71A3DC3E7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DriveDirectorySize.Domain.Test", "DriveDirectorySize.Domain.Test\DriveDirectorySize.Domain.Test.csproj", "{94011B68-DB17-4597-911F-D36887FA7768}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BD2CA379-8FAB-49AE-B413-6D71A3DC3E7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD2CA379-8FAB-49AE-B413-6D71A3DC3E7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD2CA379-8FAB-49AE-B413-6D71A3DC3E7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94011B68-DB17-4597-911F-D36887FA7768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94011B68-DB17-4597-911F-D36887FA7768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94011B68-DB17-4597-911F-D36887FA7768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94011B68-DB17-4597-911F-D36887FA7768}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

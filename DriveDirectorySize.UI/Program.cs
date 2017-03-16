@@ -1,4 +1,6 @@
-﻿namespace DriveDirectorySize.UI
+﻿using DriveDirectorySize.UI.Controllers;
+
+namespace DriveDirectorySize.UI
 {
     class Program
     {

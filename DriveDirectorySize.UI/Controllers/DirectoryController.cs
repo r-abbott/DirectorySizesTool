@@ -8,7 +8,7 @@ using DriveDirectorySize.UI.ViewModels;
 using DriveDirectorySize.UI.Views;
 using System;
 
-namespace DriveDirectorySize.UI
+namespace DriveDirectorySize.UI.Controllers
 {
     public class DirectoryController
     {
@@ -33,7 +33,7 @@ namespace DriveDirectorySize.UI
             // TODO - have one handler and just fill it with necessary commands
             _driveReaderCommandHandler = new DriveReaderCommandHandler(this);
             _currentCommandHandler = new DriveLetterCommandHandler(this);
-            _view = new DirectoryView(this);
+            _view = new DirectoryView();
         }
 
         public void Handle()
