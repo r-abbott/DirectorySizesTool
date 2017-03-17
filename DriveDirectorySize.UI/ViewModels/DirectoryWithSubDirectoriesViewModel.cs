@@ -46,7 +46,7 @@ namespace DriveDirectorySize.UI.ViewModels
 
         private void Render(DirectorySizeData directory)
         {
-            var size = _sizeConversion.Convert(directory.Size);
+            var size = _sizeConversion.Convert(directory.LocalSize);
             var totalSize = _sizeConversion.Convert(directory.TotalSize);
             var output = $"{directory.Name,NAME_COLUMN_WIDTH}{size,SIZE_COLUMN_WIDTH}{totalSize,SIZE_COLUMN_WIDTH}";
             RenderColorLine(totalSize, output);
@@ -54,7 +54,7 @@ namespace DriveDirectorySize.UI.ViewModels
 
         private void RenderSubDirectory(DirectorySizeData directory)
         {
-            var size = _sizeConversion.Convert(directory.Size);
+            var size = _sizeConversion.Convert(directory.LocalSize);
             var totalSize = _sizeConversion.Convert(directory.TotalSize);
             var output = $"  {directory.Name,NAME_COLUMN_WIDTH+2}{size,SIZE_COLUMN_WIDTH}{totalSize,SIZE_COLUMN_WIDTH}";
             RenderColorLine(totalSize, output);            

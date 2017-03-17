@@ -2,6 +2,8 @@
 using DriveDirectorySize.UI.Controllers;
 using DriveDirectorySize.UI.Infrastructure;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace DriveDirectorySize.UI.CommandHandlers
@@ -31,7 +33,6 @@ namespace DriveDirectorySize.UI.CommandHandlers
                         ChangeDirectory(parts.Skip(1));
                         break;
                     case "discover":
-
                         DiscoverLargestDirectories(parts);
                         break;
                     case "greater":
@@ -39,6 +40,9 @@ namespace DriveDirectorySize.UI.CommandHandlers
                         break;
                     case "read":
                         ReadDrive(parts);
+                        break;
+                    case "open":
+                        Open(parts);
                         break;
                     default:
                         UIConsole.WriteLine("Invalid command.\nCommands are\n  cd [subdirectory name]\n  discover <[percent threshold]>\n  greater [size] <[b/kb/mb/gb]>\n  quit \n  read [drive letter]");
@@ -121,6 +125,23 @@ namespace DriveDirectorySize.UI.CommandHandlers
                 return;
             }
             _controller.ReadDrive(parts[1].ToLower()[0]);
+        }
+
+        private void Open(string[] parts)
+        {
+            string path = _controller.CurrentDirectoryPath;
+            if (parts.Length > 1)
+            {
+                path = parts[1];
+            }
+            try
+            {
+                Process.Start(path);
+            }
+            catch(Win32Exception win32Exception)
+            {
+                UIConsole.WriteLine($"Couldn't open {path}. {win32Exception.Message}");
+            }
         }
     }
 }

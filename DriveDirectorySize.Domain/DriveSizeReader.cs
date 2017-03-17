@@ -21,7 +21,7 @@ namespace DriveDirectorySize.Domain
 
         internal DriveSizeReader(IEnumerable<DirectorySizeData> directories)
         {
-            _directoryData = directories.OrderBy(x => x.Path.Length).ThenBy(x => x.Name).ToList();
+            _directoryData = directories.OrderBy(x => x.Path.Depth).ThenBy(x => x.Name).ToList();
             ChangeCurrentDirectory(Root);
         }
 
@@ -103,10 +103,8 @@ namespace DriveDirectorySize.Domain
 
         private IEnumerable<DirectorySizeData> GetSubDirectories(DirectorySizeData directory)
         {
-            int depth = directory.Path.Length;
             var directories = _directoryData.Where(d =>
-                d.ParentName == directory.Name
-                && d.Path.Length == depth + 1)
+                d.Path.ParentPath == directory.Path.FullPath)
                 .OrderBy(d => d.Name);
 
             return directories;

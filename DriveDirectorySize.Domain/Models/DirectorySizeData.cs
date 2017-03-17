@@ -10,13 +10,13 @@ namespace DriveDirectorySize.Domain.Models
         [JsonIgnore]
         public string ParentName { get { return Path.Parent; } }
         public Path Path { get; }
-        public long Size { get; }
+        public long LocalSize { get; private set; }
         public long TotalSize { get; private set; }
 
         internal DirectorySizeData(string path, long size)
         {
             Path = new Path(path);
-            Size = size;
+            LocalSize = size;
             TotalSize = size;
         }
 
@@ -26,12 +26,21 @@ namespace DriveDirectorySize.Domain.Models
             if (path == null) throw new ArgumentNullException("path");
 
             Path = new Path(path);
-            Size = size;
+            LocalSize = size;
             TotalSize = totalSize;
         }
 
-        internal void IncreaseTotalSize(long size)
+        public void SetSelfSize(long size)
         {
+            if (size < 0) return;
+
+            LocalSize = size;
+            SetSizeFromDescendant(size);
+        }
+
+        public void SetSizeFromDescendant(long size)
+        {
+            if (size < 0) return;
             TotalSize += size;
         }
     }

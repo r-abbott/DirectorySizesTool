@@ -1,5 +1,6 @@
 ﻿using DriveDirectorySize.Domain.Models;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace DriveDirectorySize.Domain.Test.Models
@@ -26,17 +27,6 @@ namespace DriveDirectorySize.Domain.Test.Models
             var path = new Path(fullPath);
 
             Assert.Equal(expected, path.Parent);
-        }
-
-        [Theory]
-        [InlineData(@"c:\", 1)]
-        [InlineData(@"c:\test", 2)]
-        [InlineData(@"c:\test\this\out", 4)]
-        public void LengthWillBeLengthOfParts(string fullPath, int expected)
-        {
-            var path = new Path(fullPath);
-
-            Assert.Equal(expected, path.Length);
         }
 
         [Theory]
@@ -162,6 +152,20 @@ namespace DriveDirectorySize.Domain.Test.Models
             var currentPath = new Path(currentFullPath);
 
             Assert.False(currentPath.IsDescendantOf(comparePath));
+        }
+
+        [Theory]
+        [InlineData(@"first",new string[0])]
+        [InlineData(@"first\second", new[] { "first" })]
+        [InlineData(@"first\second\third", new[] { "first", @"first\second" })]
+        [InlineData(@"first\second\third\fourth", new[] { "first", @"first\second", @"first\second\third" })]
+        public void GetAncestorPathsWillReturnAllAncestorPaths(string fullPath, string[] expected)
+        {
+            var path = new Path(fullPath);
+
+            var result = path.GetAncestorPaths();
+
+            Assert.Equal(expected.ToList(), result);
         }
 
         public void DefaultsToFullPath()

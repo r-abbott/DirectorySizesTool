@@ -11,9 +11,8 @@ namespace DriveDirectorySize.Domain
     internal class DriveExecutor
     {
         private string _drive;
-        private BlockingCollection<DirectorySizeData> _localSizeDirectories;
-        private BlockingCollection<DirectorySizeData> _finalDirectories;
         private BlockingCollection<string> _inputDirectories;
+        private ConcurrentDictionary<string, DirectorySizeData> _directories;
         private List<DirectorySizeWorker> _readers;
         private ILog _log;
 
@@ -21,10 +20,11 @@ namespace DriveDirectorySize.Domain
         {
             _drive = drive;
             _log = log;
-            _finalDirectories = new BlockingCollection<DirectorySizeData>();
-            _localSizeDirectories = new BlockingCollection<DirectorySizeData>();
             _inputDirectories = new BlockingCollection<string>();
             _readers = new List<DirectorySizeWorker>();
+
+            _directories = new ConcurrentDictionary<string, DirectorySizeData>();
+            
         }
 
         public IEnumerable<DirectorySizeData> Run()
@@ -34,7 +34,7 @@ namespace DriveDirectorySize.Domain
             int taskId = 0;
             _readers.ForEach(r =>
             {
-                Task task = Task.Run(() => r.ProcessLocalSizes());
+                Task task = Task.Run(() => r.ProcessSizes());
                 workerTasks[taskId++] = task;
             });
 
@@ -43,26 +43,16 @@ namespace DriveDirectorySize.Domain
             map.ReadAll();
 
             Task.WaitAll(workerTasks);
-            _localSizeDirectories.CompleteAdding();
-            WriteOutput("Finished processing local sizes.");
-            WriteOutput("Processing total sizes.");
-
-            taskId = 0;
-            _readers.ForEach(r =>
-            {
-                Task task = Task.Run(() => r.ProcessTotalSizes());
-                workerTasks[taskId++] = task;
-            });
-            Task.WaitAll(workerTasks);
             WriteOutput("Finished.\n");
-            return _finalDirectories.ToList();
+            return _directories.Select(x => x.Value).ToList();
+
         }
 
         private void SetupReaders()
         {
             for (int i = 0; i < Environment.ProcessorCount; i++)
             {
-                var worker = new DirectorySizeWorker(_inputDirectories, _localSizeDirectories, _finalDirectories);
+                var worker = new DirectorySizeWorker(_inputDirectories, _directories);
                 _readers.Add(worker);
             }
         }

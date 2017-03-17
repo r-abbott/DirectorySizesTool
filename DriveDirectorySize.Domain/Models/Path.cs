@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DriveDirectorySize.Domain.Models
@@ -18,8 +19,6 @@ namespace DriveDirectorySize.Domain.Models
         [JsonIgnore]
         public string[] Parts { get; }
         [JsonIgnore]
-        public int Length { get { return Parts.Length; } }
-        [JsonIgnore]
         public int Depth { get { return Parts.Length - 1; } }
 
         private const char PATH_SEPARATOR = '\\';
@@ -29,7 +28,7 @@ namespace DriveDirectorySize.Domain.Models
         {
             if (string.IsNullOrEmpty(fullPath)) throw new ArgumentNullException("fullPath");
 
-            if (fullPath.EndsWith("\\"))
+            if (fullPath.EndsWith(PATH_SEPARATOR.ToString()))
             {
                 fullPath = fullPath.Substring(0, fullPath.Length - 1);
             }
@@ -64,6 +63,38 @@ namespace DriveDirectorySize.Domain.Models
             return true;
         }
 
+        public override string ToString()
+        {
+            return FullPath;
+        }
+
+        public static implicit operator string(Path path)
+        {
+            return path.FullPath;
+        }
+
+        public IEnumerable<string> GetAncestorPaths()
+        {
+            var ancestorPaths = new List<string>();
+
+            for(int i = 0; i < Depth; i++)
+            {
+                ancestorPaths.Add(GetPathToDepth(i));
+            }
+            return ancestorPaths;
+        }
+
+        private string GetPathToDepth(int depth)
+        {
+            var path = new List<string>();
+
+            for(int i = 0; i < depth+1; i++)
+            {
+                path.Add(Parts[i]);
+            }
+            return string.Join(PATH_SEPARATOR.ToString(), path.ToArray());
+        }
+
         private string[] CreateParts()
         {
             return FullPath.Split(new[] { PATH_SEPARATOR }, StringSplitOptions.RemoveEmptyEntries);
@@ -92,15 +123,6 @@ namespace DriveDirectorySize.Domain.Models
 
             return string.Join($"{PATH_SEPARATOR}", Parts.Take(Depth));
         }
-
-        public override string ToString()
-        {
-            return FullPath;
-        }
-
-        public static implicit operator string(Path path)
-        {
-            return path.FullPath;
-        }
+        
     }
 }
