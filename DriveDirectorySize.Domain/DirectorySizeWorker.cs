@@ -75,7 +75,7 @@ namespace DriveDirectorySize.Domain
             int depth = data.Path.Depth;
             var totalSize = _localdirectorySizes
                 .Where(d => d.Path.Depth > depth
-                            && d.Path.IsDescendentOf(data.Path))
+                            && d.Path.IsDescendantOf(data.Path))
                 .Sum(d => d.Size);
             data.IncreaseTotalSize(totalSize);
             _finalDirectorySizes.Add(data);

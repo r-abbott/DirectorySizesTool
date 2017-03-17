@@ -67,7 +67,7 @@ namespace DriveDirectorySize.UI.ViewModels
             {
                 string formattedPath = dir.Path.FullPath;
 
-                var ancestors = _directories.Where(d => dir.Path.IsDescendentOf(d.Path));
+                var ancestors = _directories.Where(d => dir.Path.IsDescendantOf(d.Path));
 
                 if (ancestors.Any())
                 {

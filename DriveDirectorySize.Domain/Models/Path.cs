@@ -42,23 +42,14 @@ namespace DriveDirectorySize.Domain.Models
             Root = Parts[0];
         }
 
-        public string PathToDepth(int depth)
-        {
-            if (depth < 0) return "";
-            if (depth > Depth) return FullPath;
-
-            return string.Join($"{PATH_SEPARATOR}", Parts.Take(depth));
-        }
-
         public string IdentityAtDepth(int depth)
         {
-            if (depth < 0) return "";
-            if (depth > Depth) return "";
+            if (depth < 0 || depth > Depth) return "";
 
             return Parts[depth];
         }
 
-        public bool IsDescendentOf(Path path)
+        public bool IsDescendantOf(Path path)
         {
             if (path == null) throw new ArgumentNullException("path");
             if (Depth <= path.Depth) return false;
@@ -71,21 +62,6 @@ namespace DriveDirectorySize.Domain.Models
                 }
             }
             return true;
-        }
-
-        public bool IsChildOf(Path path)
-        {
-            if (path == null) throw new ArgumentNullException("path");
-            if (Depth <= path.Depth) return false;
-
-            return ParentPath == path.FullPath;
-        }
-
-        public string GetAncestorPath(int depth)
-        {
-            if (depth >= Depth) return null;
-
-            return PathToDepth(depth);
         }
 
         private string[] CreateParts()
