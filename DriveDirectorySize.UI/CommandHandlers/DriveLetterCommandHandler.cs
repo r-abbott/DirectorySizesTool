@@ -21,7 +21,8 @@ namespace DriveDirectorySize.UI.CommandHandlers
 
         private string GetInput()
         {
-            UIConsole.Write("Which drive do you want to read: ");
+            var availableDrives = string.Join(",", _controller.AvailableDrives());
+            UIConsole.Write($"Which drive do you want to read ({availableDrives}): ");
             return UIConsole.ReadLine();
         }
     }

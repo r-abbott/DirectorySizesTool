@@ -2,7 +2,9 @@
 using DriveDirectorySize.Domain.Storage;
 using DriveDirectorySize.Domain.Storage.Contracts;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DriveDirectorySize.Domain
 {
@@ -17,14 +19,28 @@ namespace DriveDirectorySize.Domain
         public Drive(char driveLetter, ILog log)
         {
             _driveDirectory = $"{driveLetter}:\\";
-            if (!Directory.Exists(_driveDirectory))
+            var driveInfo = new DriveInfo(_driveDirectory);
+            
+            if (driveInfo == null)
             {
                 throw new InvalidOperationException($"Drive {_driveLetter} does not exist.");
             }
+            _driveDirectory = driveInfo.RootDirectory.FullName;
             _driveLetter = driveLetter;
             _storage = new DiskStorage(log);
             _log = log;
             CreateFilePath(driveLetter);
+        }
+
+        public static IEnumerable<string> AvailableDrives()
+        {
+            var validDriveTypes = new List<DriveType>
+            {
+                DriveType.Fixed,
+                DriveType.Removable
+            };
+
+            return DriveInfo.GetDrives().Where(d => validDriveTypes.Contains(d.DriveType)).Select(d => d.Name);
         }
 
         public IDriveReader ReadFromStorage()

@@ -7,6 +7,7 @@ using DriveDirectorySize.UI.Infrastructure;
 using DriveDirectorySize.UI.ViewModels;
 using DriveDirectorySize.UI.Views;
 using System;
+using System.Collections.Generic;
 
 namespace DriveDirectorySize.UI.Controllers
 {
@@ -39,6 +40,11 @@ namespace DriveDirectorySize.UI.Controllers
         public void Handle()
         {
             _view.Display(new IntroViewModel(), _currentCommandHandler);
+        }
+
+        public IEnumerable<string> AvailableDrives()
+        {
+            return Drive.AvailableDrives();
         }
 
         public void ReadDrive(char driveLetter)

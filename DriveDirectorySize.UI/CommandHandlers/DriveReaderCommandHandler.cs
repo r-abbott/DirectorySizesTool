@@ -45,7 +45,7 @@ namespace DriveDirectorySize.UI.CommandHandlers
                         Open(parts);
                         break;
                     default:
-                        UIConsole.WriteLine("Invalid command.\nCommands are\n  cd [subdirectory name]\n  discover <[percent threshold]>\n  greater [size] <[b/kb/mb/gb]>\n  quit \n  read [drive letter]");
+                        UIConsole.WriteLine("Invalid command.\nCommands are\n  cd [subdirectory name]\n  discover <[percent threshold]>\n  greater [size] <[b/kb/mb/gb]>\n  open <[path]>\n  quit \n  read [drive letter]");
                         break;
                 }
                 input = GetInput();
@@ -132,7 +132,7 @@ namespace DriveDirectorySize.UI.CommandHandlers
             string path = _controller.CurrentDirectoryPath;
             if (parts.Length > 1)
             {
-                path = parts[1];
+                path = string.Join(" ", parts.Skip(1));
             }
             try
             {
