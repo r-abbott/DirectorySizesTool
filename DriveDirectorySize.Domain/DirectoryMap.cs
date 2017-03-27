@@ -46,14 +46,7 @@ namespace DriveDirectorySize.Domain
         {
             if (_log != null)
             {
-                if (di.FullName.Length > 100)
-                {
-                    _log.WriteConcurrent($"Processing: {di.FullName.Substring(0, 100)}");
-                }
-                else
-                {
-                    _log.WriteConcurrent($"Processing: {di.FullName}");
-                }
+                _log.WriteConcurrent($"{di.FullName}");
             }
         }
     }

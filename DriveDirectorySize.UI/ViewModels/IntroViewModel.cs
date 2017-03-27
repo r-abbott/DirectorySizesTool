@@ -6,7 +6,7 @@ namespace DriveDirectorySize.UI.ViewModels
     {
         public void Render()
         {
-            UIConsole.Write("Drive Directory Sizes Tool.\n");
+            UIConsole.Write("Directory Sizes Tool.\n");
             UIConsole.WriteHorizontalRule();
         }
     }

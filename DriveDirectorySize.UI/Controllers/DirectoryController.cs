@@ -8,6 +8,7 @@ using DriveDirectorySize.UI.ViewModels;
 using DriveDirectorySize.UI.Views;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DriveDirectorySize.UI.Controllers
 {
@@ -22,19 +23,20 @@ namespace DriveDirectorySize.UI.Controllers
         private IDriveReader _reader;
         private ICommandHandler _currentCommandHandler;
 
+        public DirectoryController()
+            : this(new ProcessLogger(), new ByteConversion())
+        {
+        }
+
         public DirectoryController(ILog log, ISizeConversion sizeConversion)
         {
             _log = log;
             _sizeConversion = sizeConversion;
-        }
-
-        public DirectoryController()
-            : this(new ProcessLogger(), new ByteConversion())
-        {
             // TODO - have one handler and just fill it with necessary commands
             _driveReaderCommandHandler = new DriveReaderCommandHandler(this);
             _currentCommandHandler = new DriveLetterCommandHandler(this);
             _view = new DirectoryView();
+            UIConsole.SetTitle("Directory Size Tool");
         }
 
         public void Handle()
@@ -55,7 +57,10 @@ namespace DriveDirectorySize.UI.Controllers
                 _reader = _drive.ReadFromStorage();
                 if (_reader == null)
                 {
+                    var stopwatch = new Stopwatch();
+                    stopwatch.Start();
                     _reader = _drive.Read();
+                    stopwatch.Stop();
                 }
                 _currentCommandHandler = _driveReaderCommandHandler;
                 DisplayCurrentDirectory();

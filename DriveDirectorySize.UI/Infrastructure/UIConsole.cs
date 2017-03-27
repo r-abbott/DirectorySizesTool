@@ -13,6 +13,11 @@ namespace DriveDirectorySize.UI.Infrastructure
             Console.WindowWidth = 150;
         }
 
+        public static void SetTitle(string title)
+        {
+            Console.Title = title;
+        }
+
         public static void Write(string text)
         {
             SetDefaultColors();
@@ -41,6 +46,10 @@ namespace DriveDirectorySize.UI.Infrastructure
 
         public static void WriteConcurrent(string text)
         {
+            if (text.Length > Console.BufferWidth - 1)
+            {
+                text = text.Substring(0, Console.BufferWidth - 1);
+            }
             EraseLine();
             Write(text);
         }

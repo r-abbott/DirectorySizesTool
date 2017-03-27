@@ -16,6 +16,8 @@ namespace DriveDirectorySize.Domain
         private List<DirectorySizeWorker> _readers;
         private ILog _log;
 
+        private int _workerThreads = Environment.ProcessorCount - 1;
+
         public DriveExecutor(string drive, ILog log)
         {
             _drive = drive;
@@ -30,7 +32,7 @@ namespace DriveDirectorySize.Domain
         public IEnumerable<DirectorySizeData> Run()
         {
             SetupReaders();
-            Task[] workerTasks = new Task[4];
+            Task[] workerTasks = new Task[_readers.Count];
             int taskId = 0;
             _readers.ForEach(r =>
             {
@@ -50,7 +52,7 @@ namespace DriveDirectorySize.Domain
 
         private void SetupReaders()
         {
-            for (int i = 0; i < Environment.ProcessorCount; i++)
+            for (int i = 0; i < _workerThreads; i++)
             {
                 var worker = new DirectorySizeWorker(_inputDirectories, _directories);
                 _readers.Add(worker);
