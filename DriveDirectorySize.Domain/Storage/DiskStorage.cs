@@ -23,7 +23,7 @@ namespace DriveDirectorySize.Domain.Storage
 
         public IEnumerable<DirectorySizeData> Retrieve(string filePath)
         {
-            WriteOutput("Looking save file.\n");
+            WriteOutput("Looking for save file.\n");
             if (Exists(filePath))
             {
                 WriteOutput("Save file found, reading... ");

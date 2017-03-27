@@ -36,7 +36,7 @@ namespace DriveDirectorySize.UI.Controllers
             _driveReaderCommandHandler = new DriveReaderCommandHandler(this);
             _currentCommandHandler = new DriveLetterCommandHandler(this);
             _view = new DirectoryView();
-            UIConsole.SetTitle("Directory Size Tool");
+            UIConsole.SetTitle("Directory Sizes Tool");
         }
 
         public void Handle()
